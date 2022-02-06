@@ -105,3 +105,15 @@ dist
 
 # TernJS port file
 .tern-port
+
+# i dont use yarn
+yarn.lock
+
+#bat files
+.bat
+start.bat
+
+commands/misc/template
+
+# ignore prettierrc
+.prettierrc

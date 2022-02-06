@@ -1,0 +1,20 @@
+{
+	"onMention": {
+		"reply": "Prefix (tiền tố) của máy chủ này là `{prefix}`. Gõ `{prefix}help` để hiện bảng giúp đỡ."
+	},
+	"common": {
+		"cooldown": "",
+		"error": "Đã có lỗi xảy ra!",
+		"none": "None"
+	},
+	"help": {
+		"description": "List all commands of bot or info about a specific command.",
+		"category": "information",
+		"usage": "<command name>"
+	},
+	"ONCE": {
+		"title": "ERROR",
+		"description": "You need to finish your previous `{command}` command first!",
+		"label": "Forward to {command} command"
+	}
+}

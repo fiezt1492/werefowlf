@@ -1,23 +1,12 @@
-/**
- * @file Main trigger handler file.
- * @author Naman Vrati
- * @since 2.0.0
- */
+const { token, client_id, test_guild_id } = require("../config");
 
 module.exports = {
 	name: "messageCreate",
-
-	/**
-	 * @description Executes when a message is created and handle it.
-	 * @author Naman Vrati
-	 * @param {*} message The message which was created.
-	 */
+	skip: true,
 
 	async execute(message) {
-		/**
-		 * @type {String[]}
-		 * @description The Message Content of the received message seperated by spaces (' ') in an array, this excludes prefix and command/alias itself.
-		 */
+
+		const { client, guild, channel, content, author } = message;
 
 		const args = message.content.split(/ +/);
 
@@ -27,7 +16,6 @@ module.exports = {
 
 		// Checking ALL triggers using every function and breaking out if a trigger was found.
 
-		/** @type {String} */
 		let check;
 
 		await message.client.triggers.every(async (trigger) => {
@@ -39,6 +27,10 @@ module.exports = {
 
 				if (message.content.includes(name)) {
 					try {
+						if (trigger.testguild)
+							if (guild.id != test_guild_id)
+								return;
+
 						trigger.execute(message, args);
 					} catch (error) {
 						// If checks fail, reply back!

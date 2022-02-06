@@ -1,0 +1,18 @@
+const Discord = require("discord.js");
+
+module.exports = {
+	name: "",
+	description: "",
+	category: "",
+	aliases: [""],
+	usage: "",
+	cooldown: 5,
+	args: false,
+	ownerOnly: false,
+	once: false,
+	permissions: ["SEND_MESSAGES"],
+
+	async execute(message, args, guildSettings, ONCE, i18n) {
+		const { client } = message;
+	},
+};

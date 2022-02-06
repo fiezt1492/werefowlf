@@ -1,21 +1,12 @@
-/**
- * @file Default Bot Mention Command
- * @author Naman Vrati
- * @since 3.0.0
- */
-
-const { prefix } = require("../config.json");
+// const { prefix } = require("../config.js");
+const guildPrefix = require("../modules/configuration/guildPrefix");
 
 module.exports = {
-	/**
-	 * @description Executes when the bot is pinged.
-	 * @author Naman Vrati
-	 * @param {Object} message The Message Object of the command.
-	 */
-
-	async execute(message) {
-		return message.channel.send(
-			`Hi ${message.author}! My prefix is \`${prefix}\`, get help by \`${prefix}help\``
+	async execute(message, i18n) {
+		return message.reply(
+			i18n.__mf("onMention.reply", {
+				prefix: message.client.prefix.get(message),
+			})
 		);
 	},
 };

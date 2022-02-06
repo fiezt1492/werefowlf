@@ -1,0 +1,71 @@
+{
+	"common": {
+		"cooldown": "You can use `{command}` command <t:{time}:R>",
+		"error": "There was an error occured!",
+		"none": "None",
+		"done": "Done!",
+		"err": "**[ERROR]** {err}"
+	},
+	"interactionCreate": {
+		"author": "This message is not for you!",
+		"missingComponents": "This message doesn't have components!"
+	},
+	"messageCreate": {
+		"guildOwner": "This command is only for guild owner.",
+		"permissions": "You can not do this!",
+		"maintain": "This command is currently under maintenance. Please wait until we completely fixed it.",
+		"args": "You didn't provide any arguments!",
+		"usage": "\nThe proper usage would be: `{prefix}{command} {usage}`",
+		"options": "\n```Usage:\n{options}```"
+	},
+	"ONCE": {
+		"title": "ERROR",
+		"description": "You need to finish your previous `{command}` command first!",
+		"label": "Forward to {command} command"
+	},
+	"onMention": {
+		"reply": "This guild prefix is `{prefix}`. Type `{prefix}help` to spawn help panel."
+	},
+	"help": {
+		"description": "List all commands of bot or info about a specific command.",
+		"category": "information",
+		"usage": "<command name>",
+		"helpEmbed": {
+			"title": "Help Panel",
+			"description": "You can use `{prefix}help <command name>` to get info on a specific command!",
+			"field0": {
+				"title": "CONNECT WITH US"
+			},
+			"field1": {
+				"title": "SUPPORT US"
+			},
+			"footer": "Select one of these categories below"
+		},
+		"components": {
+			"placeholder": "Please select a category",
+			"home": {
+				"label": "Home",
+				"description": "Showing homepage"
+			},
+			"slash": {
+				"label": "Slash Commands Panel",
+				"description": "Show Slash Commands Panel"
+			},
+			"category": {
+				"label": "{category}",
+				"description": "Get commands from {category} category"
+			},
+			"invite": "Invite me",
+			"vote": "Vote me",
+			"supportserver": "Support Server"
+		},
+		"invalid": "That's not a valid command!",
+		"commandEmbed": {
+			"description": "Find information on the command provided.\nMandatory arguments `[]`, optional arguments `<>`.",
+			"fieldDescription": "Description",
+			"fieldAliases": "Aliases",
+			"fieldCooldown": "Cooldown",
+			"fieldUsage": "Usage"
+		}
+	}
+}

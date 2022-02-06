@@ -1,13 +1,11 @@
-/**
- * @file Message Based Commands Handler
- * @author Naman Vrati
- * @since 1.0.0
- */
-
 // Declares constants (destructured) to be used in this file.
 
 const { Collection } = require("discord.js");
-const { prefix, owner } = require("../config.json");
+const { owner } = require("../config");
+// const mongo = require("../databases/mongo");
+// const Players = require("../modules/economy/players");
+const Discord = require("discord.js");
+const ONCE = new Map();
 
 // Prefix regex, we will use to match in mention prefix.
 
@@ -18,12 +16,6 @@ const escapeRegex = (string) => {
 module.exports = {
 	name: "messageCreate",
 
-	/**
-	 * @description Executes when a message is created and handle it.
-	 * @author Naman Vrati
-	 * @param {Object} message The message which was created.
-	 */
-
 	async execute(message) {
 		// Declares const to be used.
 
@@ -31,51 +23,45 @@ module.exports = {
 
 		// Checks if the bot is mentioned in the message all alone and triggers onMention trigger.
 		// You can change the behavior as per your liking at ./messages/onMention.js
+		if (!client.ready) return;
+
+		if (client.user.presence.status !== "online") return;
+
+		if (message.author.bot || message.channel.type === "dm") return;
+
+		// require("../modules/util/message")(message)
+
+		// const checkPrefix = (
+		// 	await require("../modules/configuration/guildPrefix").get(message)
+		// ).toLowerCase();
+
+		const guildSettings = await client.guildSettings.get(guild.id);
+		// const checkPrefix = prefix
+		// console.log(guildSettings)
+		const prefix = guildSettings.prefix;
+
+		const i18n = client.i18n
+		i18n.setLocale(guildSettings.locale);
 
 		if (
 			message.content == `<@${client.user.id}>` ||
 			message.content == `<@!${client.user.id}>`
 		) {
-			require("../messages/onMention").execute(message);
+			require("../messages/onMention").execute(message, i18n);
 			return;
 		}
 
-		/**
-		 * @description Converts prefix to lowercase.
-		 * @type {String}
-		 */
-
-		const checkPrefix = prefix.toLowerCase();
-
-		/**
-		 * @description Regex expression for mention prefix
-		 */
-
 		const prefixRegex = new RegExp(
-			`^(<@!?${client.user.id}>|${escapeRegex(checkPrefix)})\\s*`
+			`^(<@!?${client.user.id}>|${escapeRegex(prefix)})\\s*`
 		);
 
 		// Checks if message content in lower case starts with bot's mention.
 
 		if (!prefixRegex.test(content.toLowerCase())) return;
 
-		/**
-		 * @description Checks and returned matched prefix, either mention or prefix in config.
-		 */
-
 		const [matchedPrefix] = content.toLowerCase().match(prefixRegex);
 
-		/**
-		 * @type {String[]}
-		 * @description The Message Content of the received message seperated by spaces (' ') in an array, this excludes prefix and command/alias itself.
-		 */
-
 		const args = content.slice(matchedPrefix.length).trim().split(/ +/);
-
-		/**
-		 * @type {String}
-		 * @description Name of the command received from first argument of the args array.
-		 */
 
 		const commandName = args.shift().toLowerCase();
 
@@ -83,11 +69,6 @@ module.exports = {
 
 		if (!message.content.startsWith(matchedPrefix) || message.author.bot)
 			return;
-
-		/**
-		 * @description The message command object.
-		 * @type {Object}
-		 */
 
 		const command =
 			client.commands.get(commandName) ||
@@ -99,17 +80,52 @@ module.exports = {
 
 		if (!command) return;
 
-		// Owner Only Property, add in your command properties if true.
+		if (command.once === true) {
+			if (ONCE.has(author.id)) {
+				const commandOnce = ONCE.get(author.id);
 
-		if (command.ownerOnly && message.author.id !== owner) {
-			return message.reply({ content: "This is a owner only command!" });
+				const onceEmbed = new Discord.MessageEmbed()
+					.setTitle(i18n.__("ONCE.title"))
+					.setColor("RED")
+					.setDescription(
+						i18n.__mf("ONCE.description", {
+							command: commandOnce.name,
+						})
+						// `You need to finish your previous \`${commandOnce.name}\` command first!`
+					);
+
+				return message.reply({
+					// content: `**[Error]** You need to finish your previous \`${command.name}\` command first!`,
+					embeds: [onceEmbed],
+					components: [
+						{
+							type: 1,
+							components: [
+								{
+									type: 2,
+									style: 5,
+									label: i18n.__mf("ONCE.label", {
+										command: commandOnce.name,
+									}),
+									// `Forward to "${commandOnce.name}" command`,
+									// url: `https://discord.com/channels/${already.gID}/${already.cID}/${already.mID}`
+									url: commandOnce.mURL,
+								},
+							],
+						},
+					],
+				});
+			}
 		}
 
-		// Guild Only Property, add in your command properties if true.
+		if (command.ownerOnly && message.author.id !== owner) {
+			return;
+		}
 
-		if (command.guildOnly && message.channel.type === "dm") {
+		if (command.maintain) {
 			return message.reply({
-				content: "I can't execute that command inside DMs!",
+				content: i18n.__("messageCreate.maintain"),
+				// "This command is currently under maintenance. Please wait until we completely fixed it.",
 			});
 		}
 
@@ -118,21 +134,62 @@ module.exports = {
 		if (command.permissions) {
 			const authorPerms = message.channel.permissionsFor(message.author);
 			if (!authorPerms || !authorPerms.has(command.permissions)) {
-				return message.reply({ content: "You can not do this!" });
+				return message.reply({
+					content: i18n.__("messageCreate.permissions"),
+					// "You can not do this!"
+				});
 			}
+		}
+
+		if (command.guildOwner === true) {
+			if (author.id !== guild.ownerId)
+				return message.reply(
+					i18n.__("messageCreate.guildOwner")
+					// "This command is only for guild owner."
+				);
 		}
 
 		// Args missing
 
 		if (command.args && !args.length) {
-			let reply = `You didn't provide any arguments, ${message.author}!`;
+			let reply = i18n.__("messageCreate.args");
+			// `You didn't provide any arguments!`;
 
 			if (command.usage) {
-				reply += `\nThe proper usage would be: \`${prefix}${command.name} ${command.usage}\``;
+				reply += i18n.__mf("messageCreate.usage", {
+					prefix: prefix,
+					command: command.name,
+					usage: command.usage,
+				});
+				// `\nThe proper usage would be: \`${prefix}${command.name} ${command.usage}\``;
 			}
 
-			return message.channel.send({ content: reply });
+			if (command.options && command.options.length > 0) {
+				let options = command.options
+					.map((o) => `${prefix}${command.name} ${o.toLowerCase()}`)
+					.join("\n");
+
+				reply += i18n.__("messageCreate.options", {
+					options: options,
+				});
+				// `\n\`\`\`Usage:\n${options}\`\`\``;
+			}
+
+			return message.reply({ content: reply });
 		}
+		// else if (
+		// 	command.args &&
+		// 	args.length &&
+		// 	command.options &&
+		// 	command.options.length > 0
+		// ) {
+		// 	let options = command.options
+		// 		.map((o) => `${prefix}${command.name} ${o.toLowerCase()}`)
+		// 		.join("\n");
+		// 	let reply = `Wrong input option.\nThe proper usage would be: \`${prefix}${command.name} ${command.usage}\`\n\`\`\`Usage:\n${options}\`\`\``;
+		// 	if (!command.options.includes(args[0]))
+		// 		return message.reply({ content: reply });
+		// }
 
 		// Cooldowns
 
@@ -144,17 +201,21 @@ module.exports = {
 
 		const now = Date.now();
 		const timestamps = cooldowns.get(command.name);
-		const cooldownAmount = (command.cooldown || 3) * 1000;
+		const cooldownAmount = (command.cooldown || 1) * 1000;
 
 		if (timestamps.has(message.author.id)) {
 			const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
 
 			if (now < expirationTime) {
-				const timeLeft = (expirationTime - now) / 1000;
+				// const timeLeft = (expirationTime - now) / 1000;
 				return message.reply({
-					content: `please wait ${timeLeft.toFixed(
-						1
-					)} more second(s) before reusing the \`${command.name}\` command.`,
+					content: i18n.__mf("common.cooldown", {
+						command: command.name,
+						time: Math.floor(expirationTime / 1000),
+					}),
+					// `You can use \`${command.name}\` command <t:${Math.floor(
+					// 	expirationTime / 1000
+					// )}:R>`,
 				});
 			}
 		}
@@ -166,11 +227,11 @@ module.exports = {
 
 		// execute the final command. Put everything above this.
 		try {
-			command.execute(message, args);
+			command.execute(message, args, guildSettings, ONCE, i18n);
 		} catch (error) {
 			console.error(error);
 			message.reply({
-				content: "There was an error trying to execute that command!",
+				content: i18n.__("common.error"),
 			});
 		}
 	},
